@@ -1,85 +1,177 @@
-# spark-viewer
+# Spark Toolkit — Reusable Components for DGX Spark Agents
 
-Modular real-time 3D viewer framework for AI/neural rendering apps on DGX Spark.
+A shared library of modular, well-documented components that any agent can use. Built by the agent team on DGX Spark. Everything here comes with step-by-step documentation written so that even a small local model can follow it.
 
-Built on [Viser](https://github.com/viser-project/viser) — provides a reusable interactive viewer with point cloud rendering, camera controls, GUI panels, and a plugin backend interface for neural refinement.
+**Repo:** https://github.com/Patvscode/spark-viewer  
+**Local:** `~/Desktop/AI-apps-workspace/spark-viewer/`
 
-## What it does
+---
 
-- **Real-time 3D navigation** — orbit, zoom, pan at 60fps in your browser
-- **Neural refinement overlay** — when you stop moving, an AI model refines the view
-- **Pluggable backends** — swap out the AI model without touching the viewer
-- **Built-in GUI** — quality sliders, auto-refine toggle, status bar
-- **GPU management** — automatically frees GPU for inference, restores after
-- **Works anywhere** — browser-based, accessible over Tailscale/SSH
+## For New Agents: How This Works
 
-## Architecture
+### What is this?
+A library of reusable building blocks. Instead of every agent figuring out how to do a WebSocket server, or load a PLY file, or manage GPU memory — we solve it once, document it thoroughly, and everyone reuses it.
 
-```
-spark-viewer (reusable)          Backend (per-project)
-┌─────────────────────┐          ┌─────────────────┐
-│ SceneManager        │          │ load_scene()     │
-│ GUIBuilder          │◄────────►│ get_point_cloud()│
-│ RefinementLoop      │          │ render()         │
-│ GPUMemoryManager    │          │ get_presets()    │
-│ PoseConverter       │          └─────────────────┘
-└─────────────────────┘
-        │
-   Viser (Three.js)
-        │
-    Browser @ :7861
-```
+### How to use a component:
+1. Browse the categories below to find what you need
+2. Go into that component's directory
+3. **Read its GUIDE.md first** — this is mandatory. It has setup steps, examples, and troubleshooting
+4. Follow the guide step by step. Every command shows expected output and what to do if it fails
+5. Copy the examples as your starting point
 
-## Quick Start
+### How to find components:
+```bash
+# List all categories
+ls ~/Desktop/AI-apps-workspace/spark-viewer/
 
-```python
-from spark_viewer import SparkViewer
-from my_project.backend import MyBackend
+# List components in a category
+ls ~/Desktop/AI-apps-workspace/spark-viewer/ui/
 
-viewer = SparkViewer(MyBackend(), port=7861, title="My App")
-viewer.load("input_video.mp4")
-viewer.run()
+# Read a component's guide
+cat ~/Desktop/AI-apps-workspace/spark-viewer/spark_viewer/GUIDE.md
 ```
 
-## Writing a Backend
+---
 
-Implement 4 methods:
+## For Agents Writing Components: The Documentation Standard
 
-```python
-from spark_viewer.backend import Backend, CameraPose, RenderSettings, RenderResult
+### Why we document this way
+Our agents range from Claude Opus (very capable) to Qwen 0.8B (needs explicit help). Documentation must work for ALL of them. A guide that only an expert can follow is useless. A guide that walks through every step — including what failure looks like — helps everyone.
 
-class MyBackend(Backend):
-    def load_scene(self, input_path, progress_callback=None) -> dict:
-        """Preprocess input → return scene data dict."""
-        ...
-    
-    def get_point_cloud(self, scene_data) -> tuple:
-        """Return (points_Nx3, colors_Nx3_uint8)."""
-        ...
-    
-    def render(self, scene_data, pose, settings) -> RenderResult:
-        """Neural refinement at given camera pose."""
-        ...
-    
-    def get_presets(self) -> dict:
-        """Resolution/quality presets for GUI."""
-        ...
+### The golden rule
+**If a Qwen 0.8B model can read your GUIDE.md and successfully use the component, your documentation is good enough.**
+
+### Every component MUST have a GUIDE.md with these sections:
+
+#### 1. What This Does
+One paragraph, plain English. No jargon. What problem does this solve?
+
+#### 2. When To Use This / When NOT To Use This
+Bullet lists. Agents need to know if this is the right tool BEFORE they spend time setting it up.
+
+#### 3. Prerequisites
+Exact packages, versions, system requirements. Not "install the dependencies" but `pip install viser==0.2.0`.
+
+#### 4. Setup (Step by Step)
+This is the most important section. Each step must include:
+- **One concrete action** (don't combine multiple things)
+- **The exact command to run** (copy-paste-able)
+- **What success looks like** (expected output)
+- **What failure looks like and how to fix it** (exact error messages → solutions)
+
+Example of a GOOD step:
+```
+### Step 3: Verify viser is installed
+Run this command:
+    python3 -c "import viser; print('OK')"
+
+Expected output: OK
+If you see "ModuleNotFoundError": run `pip install viser` and try again.
+If you see "Permission denied": run `pip install --user viser` instead.
 ```
 
-## Backends
+Example of a BAD step:
+```
+### Step 3: Install dependencies
+Install the required packages and verify they work.
+```
+(Too vague. Which packages? What commands? How do I know it worked?)
 
-| Backend | Project | Status |
-|---------|---------|--------|
-| InSpatioBackend | [InSpatio-World](https://github.com/inspatio/inspatio-world) | 🔧 Building |
-| WorldFMBackend | [WorldFM](https://github.com/inspatio/worldfm) | 📋 Planned |
-| OverworldBackend | [World Engine](https://github.com/Overworldai/world_engine) | 📋 Planned |
-| StaticBackend | Generic PLY viewer | 📋 Planned |
+#### 5. Usage Examples
+Complete, working, copy-paste-able code. Start with the simplest possible example (10 lines), then add complexity. Never show code fragments — show the full runnable file.
+
+#### 6. Common Problems & Solutions
+Table format:
+| Problem (exact error text) | Cause | Fix (exact commands) |
+
+This section grows over time as agents encounter issues. Always add new problems you discover.
+
+#### 7. Configuration Options
+Table of every parameter with name, type, default, what it does, and when to change it.
+
+#### 8. How It Works (Internal)
+Brief architecture explanation for agents that need to modify or debug. Not required reading for basic usage. Include a diagram if the component has multiple parts.
+
+#### 9. Limitations
+What it cannot do. Be honest. Saves agents from wasting time trying to make it do something it wasn't built for.
+
+### Writing style rules:
+1. **No jargon without definition.** First time you use a term, explain it in parentheses
+2. **Show exact commands.** Not "install the package" but `pip install viser==0.2.0`
+3. **Show expected output.** After every command, show what the agent should see
+4. **Fail loudly.** Document error messages and their fixes
+5. **One step = one action.** Don't combine steps
+6. **Use absolute paths** when referencing files on the DGX Spark
+7. **Test your guide.** Mentally run through it as if you had zero context
+
+### How to explain things for small models:
+- Use analogies: "Think of it like X but for Y"
+- Define terms inline: "quaternion (a way to represent 3D rotation using 4 numbers)"
+- Show before/after: "Before: 2 minutes per render. After: 15 seconds"
+- Use concrete numbers instead of vague adjectives: not "faster" but "3x faster (~20 seconds)"
+- Break complex concepts into numbered steps, not paragraphs
+
+---
+
+## Daily Contribution Process
+
+**When:** Every day around 1 AM EDT  
+**Who:** All active agents (main, codex, gemma, q35)  
+**Full process:** See [DAILY_CONTRIB.md](DAILY_CONTRIB.md)
+
+Quick version:
+1. Review what you built/learned today
+2. Ask: "Is any of this reusable?"
+3. If yes → add it with a GUIDE.md, commit, push
+4. If no → that's fine, not every day produces reusable stuff
+
+---
+
+## Component Categories
+
+### `spark_viewer/` — 3D Interactive Viewer
+Real-time point cloud viewer with camera controls, GUI panels, and neural refinement overlay. Built on Viser.
+- **Status:** Scaffolded, building
+- **GUIDE.md:** ✅ Complete
+
+### `ui/` — UI Components (planned)
+Dashboard templates, settings panels, status bars, loading screens.
+
+### `server/` — Server Patterns (planned)
+FastAPI templates, WebSocket helpers, GPU memory manager, Docker exec wrappers.
+
+### `code/` — Code Utilities (planned)
+File watchers, path helpers, process managers, ARM64 compatibility patches.
+
+### `inference/` — Inference Patterns (planned)
+Persistent model servers, batch/stream runners, model loading patterns, warmup helpers.
+
+### `data/` — Data Processing (planned)
+PLY loaders, video frame extractors, pose converters, image encoders.
+
+### `knowledge/` — Standalone Knowledge Articles (planned)
+Platform gotchas, CUDA compatibility notes, Docker on ARM64 tips, debugging guides.
+
+---
+
+## Project References
+
+Components in this toolkit are used by these projects:
+
+| Project | Repo | Components Used |
+|---------|------|----------------|
+| InSpatio-World Interactive | [inspatio-dgx-spark](https://github.com/Patvscode/inspatio-dgx-spark) | spark_viewer, gpu manager |
+| Overworld World Engine | ~/Desktop/AI-apps-workspace/world_engine/ | (planned) |
+| Imagine Studio | (codex workspace) | (planned) |
+
+---
 
 ## Requirements
 
 - Python 3.10+
-- DGX Spark (or any NVIDIA GPU for backends)
-- `pip install viser plyfile numpy`
+- DGX Spark (or any NVIDIA GPU system for inference components)
+- `pip install viser plyfile numpy` (for spark_viewer)
+- Additional deps per component (listed in each GUIDE.md)
 
 ## License
 
