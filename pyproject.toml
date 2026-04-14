@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spark-viewer"
+version = "0.1.0"
+description = "Modular real-time 3D viewer for AI/neural rendering on DGX Spark"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = [
+    "viser>=0.2.0",
+    "plyfile",
+    "numpy",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
